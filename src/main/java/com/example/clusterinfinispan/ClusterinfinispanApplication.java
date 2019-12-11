@@ -1,6 +1,6 @@
 package com.example.clusterinfinispan;
 
-import com.example.clusterinfinispan.app.DummyService;
+import com.example.clusterinfinispan.app.CacheTesterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +9,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.StopWatch;
 
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @SpringBootApplication
 @EnableScheduling
@@ -24,25 +24,22 @@ public class ClusterinfinispanApplication implements CommandLineRunner {
 	}
 
 	@Autowired
-	DummyService dummyService;
+	CacheTesterService cacheTesterService;
 
 	@Override
-	public void run(String... args) throws Exception {
-		IntStream.range(0, 100000).forEach(r-> {
+	public void run(String... args) {
+
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		IntStream.range(0, Integer.MAX_VALUE).forEach(r-> {
 			sleep(100);
-
-			try {
-				dummyService.sayHi();
-			} catch (Exception e) {
-				log.error(e.getMessage());
-
-			}
+			cacheTesterService.getOrPut();
 		});
 	}
 
 	@Scheduled(fixedDelay = 5000)
 	public void clearCache() {
-		dummyService.clearCache();
+		cacheTesterService.clear();
 
 	}
 

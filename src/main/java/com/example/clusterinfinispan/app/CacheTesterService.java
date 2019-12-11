@@ -11,22 +11,26 @@ import javax.annotation.PostConstruct;
 import java.util.Arrays;
 
 @Service
-public class DummyService {
+public class CacheTesterService {
 
-    private Logger log = LoggerFactory.getLogger(DummyService.class);
+    private Logger log = LoggerFactory.getLogger(CacheTesterService.class);
 
     private final Environment environment;
     private final EmbeddedCacheManager embeddedCacheManager;
 
+    private String nodeType;
+    private int counter = 0;
+
     public static final String KEY = "CACHE_KEY";
 
-    public DummyService(Environment environment, EmbeddedCacheManager embeddedCacheManager) {
+    public CacheTesterService(Environment environment, EmbeddedCacheManager embeddedCacheManager) {
         this.environment = environment;
         this.embeddedCacheManager = embeddedCacheManager;
     }
 
-    public void sayHi() {
+    public void getOrPut() {
         Cache<Object, Object> cache = embeddedCacheManager.getCache("spring-cache");
+        log.info("GET");
         Object message = cache.get(KEY);
 
         if(message != null) {
@@ -34,25 +38,24 @@ public class DummyService {
             return;
         }
 
-        String value = "cache-" + name + "-" + System.currentTimeMillis();
+        String value = "value-" + nodeType + "-" + ++counter;
         log.warn("PUT " + value);
         cache.put(KEY, value);
 
     }
 
-    public void clearCache() {
-        if(name.equals("master")){
+    public void clear() {
+        if(nodeType.equals("master")){
             Cache<Object, Object> cache = embeddedCacheManager.getCache("spring-cache");
+            log.warn("REMOVE");
             Object removedValue = cache.remove(KEY);
             log.warn("REMOVE '{}'", removedValue);
         }
     }
 
-    private String name;
-
     @PostConstruct
     public void postConstruct(){
         boolean master = Arrays.asList(environment.getActiveProfiles()).contains("master");
-        name = master ? "master" : "slave";
+        nodeType = master ? "master" : "slave";
     }
 }
