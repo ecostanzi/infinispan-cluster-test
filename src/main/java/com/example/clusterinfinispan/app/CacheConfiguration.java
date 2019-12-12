@@ -24,7 +24,7 @@ public class CacheConfiguration {
         return () -> GlobalConfigurationBuilder
                 .defaultClusteredBuilder()
                 .transport().defaultTransport()
-                .addProperty("configurationFile", "jgroups-config.xml")
+                .addProperty("configurationFile", "jgroups-config-tcp-nio.xml")
                 .clusterName("infinispan-demo-cluster").globalJmxStatistics()
                 .enabled(true)
                 .allowDuplicateDomains(true)
@@ -44,7 +44,7 @@ public class CacheConfiguration {
                     .addClusterLoader()
                     .remoteCallTimeout(800)
                 .clustering()
-                    .cacheMode(CacheMode.INVALIDATION_SYNC)
+                    .cacheMode(CacheMode.INVALIDATION_ASYNC)
                 .jmxStatistics().enabled(false)
                 .locking()
                     .concurrencyLevel(1000)

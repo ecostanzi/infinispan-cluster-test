@@ -15,22 +15,23 @@ public class CacheTesterService {
 
     private Logger log = LoggerFactory.getLogger(CacheTesterService.class);
 
-    private final Environment environment;
     private final EmbeddedCacheManager embeddedCacheManager;
 
     private String nodeType;
-    private int counter = 0;
+    private int getCounter = 0;
+    private int putCounter = 0;
 
     public static final String KEY = "CACHE_KEY";
 
     public CacheTesterService(Environment environment, EmbeddedCacheManager embeddedCacheManager) {
-        this.environment = environment;
         this.embeddedCacheManager = embeddedCacheManager;
+        boolean master = Arrays.asList(environment.getActiveProfiles()).contains("master");
+        nodeType = master ? "master" : "slave";
     }
 
     public void getOrPut() {
         Cache<Object, Object> cache = embeddedCacheManager.getCache("spring-cache");
-        log.info("GET");
+        log.info("GET #{}", ++getCounter);
         Object message = cache.get(KEY);
 
         if(message != null) {
@@ -38,7 +39,7 @@ public class CacheTesterService {
             return;
         }
 
-        String value = "value-" + nodeType + "-" + ++counter;
+        String value = "value-" + nodeType + "-" + ++putCounter;
         log.warn("PUT " + value);
         cache.put(KEY, value);
 
@@ -55,7 +56,6 @@ public class CacheTesterService {
 
     @PostConstruct
     public void postConstruct(){
-        boolean master = Arrays.asList(environment.getActiveProfiles()).contains("master");
-        nodeType = master ? "master" : "slave";
+
     }
 }
