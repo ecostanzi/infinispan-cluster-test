@@ -4,6 +4,8 @@ import org.infinispan.Cache;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -17,16 +19,15 @@ public class CacheTesterService {
 
     private final EmbeddedCacheManager embeddedCacheManager;
 
-    private String nodeType;
     private int getCounter = 0;
     private int putCounter = 0;
 
     public static final String KEY = "CACHE_KEY";
 
-    public CacheTesterService(Environment environment, EmbeddedCacheManager embeddedCacheManager) {
+    private String nodeName;
+    public CacheTesterService(EmbeddedCacheManager embeddedCacheManager, @Value("${node.name}") String nodeName) {
         this.embeddedCacheManager = embeddedCacheManager;
-        boolean master = Arrays.asList(environment.getActiveProfiles()).contains("master");
-        nodeType = master ? "master" : "slave";
+        this.nodeName = nodeName;
     }
 
     public void getOrPut() {
@@ -38,24 +39,23 @@ public class CacheTesterService {
             log.info("HIT '{}'", message);
             return;
         }
-
-        String value = "value-" + nodeType + "-" + ++putCounter;
+        log.warn("MISS");
+        String value = "value-" + nodeName + "-" + ++putCounter;
         log.warn("PUT " + value);
         cache.put(KEY, value);
 
     }
 
     public void clear() {
-        if(nodeType.equals("master")){
-            Cache<Object, Object> cache = embeddedCacheManager.getCache("spring-cache");
-            log.warn("REMOVE");
-            Object removedValue = cache.remove(KEY);
-            log.warn("REMOVE '{}'", removedValue);
-        }
+        Cache<Object, Object> cache = embeddedCacheManager.getCache("spring-cache");
+        log.warn("REMOVE");
+        Object removedValue = cache.remove(KEY);
+        log.warn("REMOVE '{}'", removedValue);
     }
 
-    @PostConstruct
-    public void postConstruct(){
-
+    @Cacheable(cacheNames = "spring-cache", key = "'greeting'")
+    public String hello() {
+        return "hello!";
     }
+
 }

@@ -3,6 +3,7 @@ package com.example.clusterinfinispan.app;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.spring.starter.embedded.InfinispanCacheConfigurer;
 import org.infinispan.spring.starter.embedded.InfinispanGlobalConfigurer;
@@ -37,23 +38,23 @@ public class CacheConfiguration {
         return manager -> {
 
             org.infinispan.configuration.cache.Configuration invalidationCacheConfiguration = new ConfigurationBuilder()
-                .transaction()
-                    .lockingMode(LockingMode.OPTIMISTIC)
-                    .transactionMode(TransactionMode.NON_TRANSACTIONAL)
-                .persistence()
-                    .addClusterLoader()
-                    .remoteCallTimeout(800)
+//                .transaction()
+//                    .transactionMode(null)
+//                .persistence()
+//                    .addClusterLoader()
+//                    .remoteCallTimeout(800)
                 .clustering()
-                    .cacheMode(CacheMode.INVALIDATION_ASYNC)
-                .jmxStatistics().enabled(false)
-                .locking()
-                    .concurrencyLevel(1000)
-                    .lockAcquisitionTimeout(15, TimeUnit.SECONDS)
-                    .isolationLevel(IsolationLevel.REPEATABLE_READ)
+                    .cacheMode(CacheMode.DIST_SYNC)
+//                .jmxStatistics().enabled(false)
+//                .locking()
+//                    .concurrencyLevel(1000)
+//                    .lockAcquisitionTimeout(15, TimeUnit.SECONDS)
+//                    .isolationLevel(IsolationLevel.REPEATABLE_READ)
                 .eviction()
-                    .type(EvictionType.COUNT).size(1000)
+                    .type(EvictionType.COUNT).strategy(EvictionStrategy.REMOVE).size(1000)
                 .expiration()
                     .lifespan(10, TimeUnit.SECONDS)
+
                 .build();
 
             manager.defineConfiguration("spring-cache", invalidationCacheConfiguration);
