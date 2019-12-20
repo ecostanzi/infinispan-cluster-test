@@ -16,6 +16,7 @@
 
 	<properties>
 		<java.version>1.8</java.version>
+		<infinispan.version>9.4.17.Final</infinispan.version>
 	</properties>
 
 	<dependencies>
