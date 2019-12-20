@@ -3,6 +3,7 @@ package com.example.clusterinfinispan;
 import com.example.clusterinfinispan.app.CacheTesterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.Arrays;
+import java.util.List;
 
 @SpringBootApplication
 @EnableScheduling
@@ -27,12 +29,11 @@ public class ClusterinfinispanApplication implements CommandLineRunner {
 	private int ok = 0;
 	private int ko = 0;
 
-	private String nodeType;
+	private List<String> cacheOps;
 
-	public ClusterinfinispanApplication(CacheTesterService cacheTesterService, Environment environment) {
+	public ClusterinfinispanApplication(CacheTesterService cacheTesterService, @Value("${node.cacheOps}") List<String> cacheOps) {
 		this.cacheTesterService = cacheTesterService;
-		boolean master = Arrays.asList(environment.getActiveProfiles()).contains("master");
-		nodeType = master ? "master" : "slave";
+		this.cacheOps = cacheOps;
 	}
 
 	@Override
@@ -44,7 +45,7 @@ public class ClusterinfinispanApplication implements CommandLineRunner {
 
 	@Scheduled(fixedDelay = 5000)
 	public void clearCache() {
-		if(nodeType.equals("master")) {
+		if(cacheOps.contains("delete")) {
 			try {
 				cacheTesterService.clear();
 				ok++;
@@ -59,7 +60,7 @@ public class ClusterinfinispanApplication implements CommandLineRunner {
 
 	@Scheduled(fixedDelay = 50)
 	void getFromCache() {
-		if(nodeType.equals("slave")) {
+		if(cacheOps.contains("write")) {
 			try {
 				cacheTesterService.getOrPut();
 				ok++;
